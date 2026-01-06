@@ -3,293 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIVERSE: PRO</title>
+    <title>UNIVERSE: DARK SIGNAL</title>
     <style>
         body {
             margin: 0;
-            background-color: #000005;
-            background-image: radial-gradient(circle at 50% 50%, #0b0b1a 0%, #000000 100%);
+            background-color: #000000;
             color: white;
             font-family: 'Courier New', Courier, monospace;
             overflow-x: hidden;
+            transition: filter 0.2s;
         }
 
-        /* ИНТЕРФЕЙС */
+        /* --- HUD --- */
         .hud {
             position: fixed;
             top: 20px;
             left: 20px;
+            width: 280px; /* Чуть уже для аккуратности */
             z-index: 1000;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
+            pointer-events: none;
+        }
+
+        .hud-main {
+            background: rgba(0, 0, 0, 0.9);
             border: 1px solid #00d2ff;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
-            backdrop-filter: blur(5px);
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.15);
+            pointer-events: auto;
         }
 
-        h1 { margin: 0 0 10px; font-size: 1.2rem; color: #00d2ff; letter-spacing: 2px; }
-        .hud-text { font-size: 0.9rem; color: #ccc; margin: 2px 0; }
-        .seed-input { 
-            background: transparent; border: none; border-bottom: 1px solid #555; 
-            color: #fff; width: 60px; text-align: center; font-family: inherit;
-        }
-
-        /* СТИЛИ КОСМОСА */
-        .universe-container {
-            width: 100%;
-            position: relative;
-            perspective: 1px; /* Нужно для параллакса, если делать через CSS 3D */
-            /* Мы будем делать JS параллакс, так что здесь просто контейнер */
-        }
-
-        .sector {
-            position: relative;
-            width: 100%;
-            height: 80vh; 
-            overflow: hidden;
-        }
-
-        /* Общие стили объектов */
-        .space-object {
-            position: absolute;
-            will-change: transform; /* Оптимизация для браузера */
-        }
-
-        .star { background: white; border-radius: 50%; opacity: 0.9; z-index: 1; }
+        h1 { margin: 0 0 10px; font-size: 1.2rem; color: #00d2ff; letter-spacing: 2px; text-transform: uppercase; }
         
-        .nebula {
-            border-radius: 50%;
-            filter: blur(50px);
-            opacity: 0.3;
-            z-index: 0; /* На заднем плане */
+        .hud-row { 
+            display: flex; justify-content: space-between; 
+            font-size: 0.8rem; color: #ccc; margin-bottom: 4px; 
         }
 
-        .planet {
-            border-radius: 50%;
-            box-shadow: inset -15px -15px 30px rgba(0,0,0,0.95), 0 0 15px rgba(255,255,255,0.15);
-            cursor: pointer;
-            z-index: 10; /* На переднем плане */
-            transition: filter 0.3s;
+        /* Поле ввода SEED */
+        .seed-container {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
-        .planet:hover { filter: brightness(1.3); }
 
-        /* МОДАЛЬНОЕ ОКНО ДАННЫХ */
-        .data-modal {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            width: 300px;
-            background: rgba(10, 15, 30, 0.95);
-            border: 2px solid #00d2ff;
-            padding: 20px;
-            z-index: 2000;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .seed-input {
+            background: rgba(0, 20, 40, 0.5);
+            border: 1px solid #333;
+            border-bottom: 1px solid #00d2ff;
+            color: #fff;
+            padding: 5px;
+            font-family: inherit;
             text-align: center;
-            box-shadow: 0 0 50px rgba(0, 210, 255, 0.3);
-        }
-        .data-modal.active { transform: translate(-50%, -50%) scale(1); }
-        .data-modal h2 { color: #00d2ff; margin-top: 0; }
-        .data-modal button {
-            margin-top: 15px;
-            background: #00d2ff; border: none; padding: 8px 20px;
-            cursor: pointer; font-weight: bold;
+            outline: none;
         }
 
-        .trigger { height: 10px; width: 100%; opacity: 0; }
+        /* КНОПКА ПРИМЕНИТЬ */
+        .btn-apply {
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid #00d2ff;
+            color: #00d2ff;
+            padding: 8px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
 
+        .btn-apply:hover {
+            background: #00d2ff;
+            color: black;
+            box-shadow: 0 0 15px #00d2ff;
+        }
+
+        .btn-apply:active {
+            transform: scale(0.98);
+        }
+
+        /* Лог событий */
+        .log-panel {
+            background: rgba(0, 10, 20, 0.9);
+            border-left: 2px solid #ff3333;
+            height: 120px;
+            overflow: hidden;
+            padding: 10px;
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column-reverse; /* Новые снизу, но мы вставляем сверху */
+            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+        }
+
+        .log-entry { margin-bottom: 4px; opacity: 0.8; text-shadow: 0 0 2px black; }
+        .log-warn { color: #ffaa00; }
+        .log-danger { color: #ff3333; font-weight: bold; }
+        .log-sys { color: #00d2ff; }
+        .log-ghost { color: #555; font-style: italic; }
+
+        /* --- ОБЪЕКТЫ --- */
+        .universe-container { width: 100%; position: relative; min-height: 100vh; }
+        .sector { position: relative; width: 100%; height: 80vh; overflow: hidden; }
+        
+        .star { position: absolute; background: white; border-radius: 50%; z-index: 1; }
+        
+        /* Планеты */
+        .planet {
+            position: absolute; border-radius: 50%;
+            box-shadow: inset -10px -10px 30px rgba(0,0,0,0.9), 0 0 10px rgba(255,255,255,0.2);
+            cursor: pointer; z-index: 10; transition: transform 0.3s;
+        }
+        .planet:hover { transform: scale(1.1); border: 1px solid #00d2ff; }
+
+        /* АНОМАЛИИ */
+        .anomaly-blackhole {
+            position: absolute; border-radius: 50%;
+            background: black;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 30px 5px rgba(255, 255, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.5);
+            z-index: 20; cursor: pointer;
+            animation: pulse-bh 2s infinite alternate;
+        }
+
+        .anomaly-rift {
+            position: absolute; width: 4px; height: 120px;
+            background: #9900ff;
+            box-shadow: 0 0 15px 4px #9900ff;
+            transform: rotate(45deg);
+            z-index: 15; cursor: pointer;
+        }
+
+        @keyframes pulse-bh { 0% { box-shadow: 0 0 20px white; } 100% { box-shadow: 0 0 50px white; } }
+
+        /* Глитч эффекты */
+        .reality-collapse {
+            animation: glitch-anim 0.2s infinite;
+            filter: contrast(200%) hue-rotate(90deg) blur(2px);
+        }
+        @keyframes glitch-anim {
+            0% { transform: translate(0); }
+            20% { transform: translate(-5px, 5px); }
+            40% { transform: translate(5px, -5px); }
+            100% { transform: translate(0); }
+        }
+
+        /* Экран смерти */
+        .signal-lost {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 9999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 2s;
+        }
+        .signal-lost.active { opacity: 1; pointer-events: auto; }
+        .signal-lost h1 { color: red; font-size: 3rem; text-shadow: 2px 2px white; font-family: sans-serif; }
+
+        .trigger { height: 10px; width: 100%; }
     </style>
 </head>
 <body>
 
     <div class="hud">
-        <h1>UNIVERSE OS</h1>
-        <p class="hud-text">Distance: <span id="distVal">0</span> LY</p>
-        <p class="hud-text">Seed: <input type="number" id="seedInput" class="seed-input" value="1234"></p>
-        <p class="hud-text" style="font-size: 10px; color: #555;">(Reload to apply seed)</p>
-    </div>
-
-    <div class="data-modal" id="modal">
-        <h2 id="mTitle">PLANET NAME</h2>
-        <p id="mDesc" style="color: #aaa; font-size: 0.9rem;"></p>
-        <button onclick="closeModal()">CLOSE LOG</button>
+        <div class="hud-main">
+            <h1>UNIVERSE OS</h1>
+            <div class="hud-row"><span>SECTOR:</span> <span id="sectorVal">000</span></div>
+            <div class="hud-row"><span>DEPTH:</span> <span id="distVal">0 LY</span></div>
+            
+            <div class="seed-container">
+                <input type="number" id="seedInput" class="seed-input" value="666" placeholder="SEED CODE">
+                <button class="btn-apply" onclick="applySeed()">REBOOT SYSTEM</button>
+            </div>
+        </div>
+        
+        <div class="log-panel" id="logPanel">
+            <div class="log-entry log-sys">> SYSTEM ONLINE</div>
+            <div class="log-entry log-sys">> WAITING FOR INPUT...</div>
+        </div>
     </div>
 
     <div class="universe-container" id="universe"></div>
     <div class="trigger" id="trigger"></div>
 
+    <div class="signal-lost" id="deathScreen">
+        <h1>SIGNAL LOST</h1>
+        <p style="color: #666;">CRITICAL REALITY FAILURE</p>
+    </div>
+
     <script>
-        // --- 1. SEED SYSTEM (ГЕНЕРАТОР СЛУЧАЙНЫХ ЧИСЕЛ) ---
-        // Чтобы вселенная была одинаковой для всех, кто введет одинаковый Seed
+        // --- SEED SYSTEM ---
+        let seed = 666;
         
-        let currentSeed = parseInt(document.getElementById('seedInput').value) || 1234;
-
-        // Простой алгоритм генерации псевдослучайных чисел (LCG)
-        function seededRandom() {
-            currentSeed = (currentSeed * 9301 + 49297) % 233280;
-            return currentSeed / 233280;
+        // Функция "псевдо-случайности"
+        function random() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
         }
+        function randRange(min, max) { return min + random() * (max - min); }
 
-        // Обёртка, чтобы получать число от min до max
-        function random(min, max) {
-            return min + seededRandom() * (max - min);
-        }
-
-        // Выбор случайного элемента из массива
-        function randomChoice(arr) {
-            return arr[Math.floor(random(0, arr.length))];
-        }
-
-        // --- ГЕНЕРАТОР ИМЕН И СВОЙСТВ ---
-        function generatePlanetData() {
-            const names = ['Xenon', 'Aria', 'Terra', 'Kryo', 'Zeus', 'Odin', 'Ragnar', 'Nova', 'C-137'];
-            const suffixes = ['Prime', 'IV', 'b', 'Alpha', 'Zero', 'X'];
-            const types = ['Gas Giant', 'Ice World', 'Desert', 'Oceanic', 'Volcanic'];
-            
-            return {
-                name: `${randomChoice(names)}-${randomChoice(suffixes)}`,
-                type: randomChoice(types),
-                temp: Math.floor(random(-200, 500)) + '°C',
-                gravity: random(0.5, 2.5).toFixed(2) + ' G'
-            };
-        }
-
-        // --- ОСНОВНАЯ ЛОГИКА ---
+        // --- DOM Elements ---
         const universe = document.getElementById('universe');
-        const distVal = document.getElementById('distVal');
-        const modal = document.getElementById('modal');
-        let totalDistance = 0;
+        const logPanel = document.getElementById('logPanel');
+        const deathScreen = document.getElementById('deathScreen');
         
-        // Массив для хранения объектов параллакса (чтобы двигать их при скролле)
-        let parallaxObjects = [];
+        let totalDistance = 0;
+        let sectorCount = 0;
 
-        function randomColor() {
-            const h = random(0, 360);
-            return `hsl(${h}, ${random(50, 80)}%, ${random(40, 60)}%)`;
+        // --- ЛОГГЕР ---
+        function addLog(msg, type = 'log-sys') {
+            const el = document.createElement('div');
+            el.className = `log-entry ${type}`;
+            el.innerText = `> ${msg}`;
+            logPanel.prepend(el);
+            if (logPanel.children.length > 8) logPanel.lastElementChild.remove();
         }
+
+        // --- ГЛАВНАЯ ФУНКЦИЯ: СМЕНА МИРА ---
+        function applySeed() {
+            // 1. Берем значение из инпута
+            const inputVal = document.getElementById('seedInput').value;
+            seed = parseInt(inputVal) || Math.floor(Math.random() * 10000); // Если пусто - случайный
+            
+            // 2. Очищаем экран
+            universe.innerHTML = ''; 
+            
+            // 3. Сбрасываем счетчики
+            totalDistance = 0;
+            sectorCount = 0;
+            document.getElementById('distVal').innerText = "0 LY";
+            document.getElementById('sectorVal').innerText = "000";
+
+            // 4. Пишем в лог
+            logPanel.innerHTML = ''; // Чистим старый лог
+            addLog(`SYSTEM REBOOTED. SEED: ${seed}`, 'log-danger');
+            addLog("GENERATING NEW TIMELINE...", 'log-sys');
+
+            // 5. Запускаем генерацию (триггер сработает сам, но добавим старт)
+            createSector();
+            createSector();
+            
+            // Скроллим наверх
+            window.scrollTo(0, 0);
+        }
+
+        // --- СОЗДАНИЕ СЕКТОРА ---
+        function randomColor() { return `hsl(${randRange(0,360)}, 70%, 50%)`; }
 
         function createSector() {
+            sectorCount++;
             const sector = document.createElement('div');
             sector.classList.add('sector');
+            const frag = document.createDocumentFragment();
 
-            const fragment = document.createDocumentFragment();
-
-            // 1. Туманности (Дальний фон)
-            if (random(0, 1) > 0.6) {
-                const nebula = document.createElement('div');
-                nebula.classList.add('space-object', 'nebula');
-                nebula.style.width = random(300, 700) + 'px';
-                nebula.style.height = random(300, 700) + 'px';
-                nebula.style.left = random(-20, 80) + '%';
-                nebula.style.top = random(0, 80) + '%';
-                nebula.style.background = randomColor();
-                
-                // Добавляем в параллакс (медленная скорость)
-                // initialTop нужно запомнить, чтобы от него считать смещение
-                nebula.dataset.speed = "0.2"; 
-                fragment.appendChild(nebula);
-            }
-
-            // 2. Звезды (Обычный слой)
-            const starCount = Math.floor(random(10, 30));
-            for(let i=0; i<starCount; i++) {
+            // Звезды
+            for(let i=0; i<35; i++) {
                 const star = document.createElement('div');
-                star.classList.add('space-object', 'star');
-                const size = random(1, 3);
-                star.style.width = size + 'px';
-                star.style.height = size + 'px';
-                star.style.left = random(0, 100) + '%';
-                star.style.top = random(0, 100) + '%';
-                star.style.opacity = random(0.5, 1);
-                fragment.appendChild(star);
+                star.className = 'star';
+                const s = randRange(1, 3);
+                star.style.width = s+'px'; star.style.height = s+'px';
+                star.style.left = randRange(0,100)+'%'; star.style.top = randRange(0,100)+'%';
+                star.style.opacity = randRange(0.2, 1);
+                frag.appendChild(star);
             }
 
-            // 3. Планеты (Ближний план)
-            if (random(0, 1) > 0.7) {
-                const planet = document.createElement('div');
-                planet.classList.add('space-object', 'planet');
-                const size = random(60, 150);
-                
-                planet.style.width = size + 'px';
-                planet.style.height = size + 'px';
-                planet.style.left = random(10, 80) + '%';
-                planet.style.top = random(10, 80) + '%';
-                planet.style.background = randomColor();
-                
-                // ДАННЫЕ ПЛАНЕТЫ
-                const data = generatePlanetData();
-                planet.onclick = () => showModal(data);
-
-                // Параллакс (быстрая скорость)
-                planet.dataset.speed = "0.15"; // Двигаем чуть-чуть относительно скролла
-                fragment.appendChild(planet);
+            // Планеты
+            if (random() > 0.65) {
+                const p = document.createElement('div');
+                p.className = 'planet';
+                const s = randRange(60, 140);
+                p.style.width = s+'px'; p.style.height = s+'px';
+                p.style.left = randRange(10,80)+'%'; p.style.top = randRange(10,80)+'%';
+                p.style.background = randomColor();
+                p.onclick = () => {
+                    addLog(`DATA: Planet ID-${Math.floor(random()*1000)} analyzed.`, 'log-sys');
+                    p.style.border = "2px solid #00d2ff";
+                };
+                frag.appendChild(p);
             }
 
-            sector.appendChild(fragment);
+            // Аномалии
+            const roll = random();
+            if (roll > 0.98) { // Черная дыра
+                const bh = document.createElement('div');
+                bh.className = 'anomaly-blackhole';
+                const s = randRange(100, 180);
+                bh.style.width = s+'px'; bh.style.height = s+'px';
+                bh.style.left = randRange(20,60)+'%'; bh.style.top = randRange(20,60)+'%';
+                bh.onclick = triggerGameOver;
+                frag.appendChild(bh);
+                addLog("WARNING: GRAVITATIONAL SINGULARITY NEARBY", "log-danger");
+            } else if (roll > 0.96) { // Разлом
+                const rift = document.createElement('div');
+                rift.className = 'anomaly-rift';
+                rift.style.left = randRange(10,90)+'%'; rift.style.top = randRange(10,90)+'%';
+                frag.appendChild(rift);
+            }
+
+            // Призрачные сообщения (редко)
+            if (roll < 0.02) {
+                setTimeout(() => addLog("...is someone there?", "log-ghost"), 1000);
+            }
+
+            sector.appendChild(frag);
             universe.appendChild(sector);
-            totalDistance += Math.floor(random(100, 300));
-            distVal.innerText = totalDistance.toLocaleString();
-
-            // Собираем новые элементы для параллакса
-            const newParallaxItems = sector.querySelectorAll('.nebula, .planet');
-            newParallaxItems.forEach(el => {
-                // Запоминаем начальную позицию относительно страницы
-                // (упрощенно: просто добавляем в массив для обработки)
-                parallaxObjects.push(el);
-            });
+            
+            totalDistance += Math.floor(randRange(300, 800));
+            document.getElementById('distVal').innerText = totalDistance.toLocaleString() + ' LY';
+            document.getElementById('sectorVal').innerText = sectorCount;
         }
 
-        // --- ПАРАЛЛАКС ЭФФЕКТ ---
-        // Срабатывает при каждом движении колесика
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-
-            // Мы не двигаем КАЖДУЮ звезду (это убьет процессор)
-            // Мы двигаем только большие объекты (планеты и туманности)
-            parallaxObjects.forEach(el => {
-                const speed = parseFloat(el.dataset.speed);
-                // Формула: сдвигаем элемент вниз или вверх в зависимости от скролла
-                // Чтобы создать ощущение глубины
-                const offset = scrollY * speed; 
-                
-                // Для планет (ближе) - двигаем ВВЕРХ быстрее (как будто пролетаем мимо)
-                // Для туманностей (дальше) - почти не двигаем
-                
-                if (el.classList.contains('planet')) {
-                    el.style.transform = `translateY(${offset * -0.5}px)`; 
-                } else {
-                    el.style.transform = `translateY(${offset * 0.2}px)`;
-                }
-            });
-        });
-
-        // --- ИНТЕРАКТИВНОСТЬ (МОДАЛКА) ---
-        function showModal(data) {
-            document.getElementById('mTitle').innerText = "SYSTEM: " + data.name;
-            document.getElementById('mDesc').innerHTML = `
-                Type: ${data.type}<br>
-                Gravity: ${data.gravity}<br>
-                Surface Temp: ${data.temp}<br>
-                <br>Status: Discovery logged.
-            `;
-            modal.classList.add('active');
+        function triggerGameOver() {
+            document.body.classList.add('reality-collapse');
+            document.querySelector('.hud').style.display = 'none';
+            setTimeout(() => deathScreen.classList.add('active'), 1500);
+            setTimeout(() => location.reload(), 5000);
         }
 
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-
-        // --- ЗАГРУЗКА ---
+        // --- SCROLL OBSERVER ---
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    // Грузим пачками
+                    // Если видно дно - генерируем еще
                     for(let i=0; i<3; i++) createSector();
                 }
             });
-        }, { rootMargin: '200px' });
+        }, { rootMargin: '400px' });
 
-        // Инициализация
-        for(let i=0; i<4; i++) createSector();
+        // Старт
+        applySeed(); // Используем функцию для начальной генерации
         observer.observe(document.getElementById('trigger'));
 
     </script>
