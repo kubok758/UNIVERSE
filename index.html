@@ -3,336 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIVERSE: DARK SIGNAL</title>
+    <title>> THE UNIVERSE</title>
     <style>
+        /* --- БАЗА --- */
         body {
-            margin: 0;
-            background-color: #000000;
-            color: white;
+            margin: 0; background-color: #000; color: white;
             font-family: 'Courier New', Courier, monospace;
             overflow-x: hidden;
-            transition: filter 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            transition: filter 0.5s;
         }
 
-        /* --- HUD --- */
-        .hud {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 280px; /* Чуть уже для аккуратности */
-            z-index: 1000;
-            pointer-events: none;
-        }
-
-        .hud-main {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #00d2ff;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.15);
-            pointer-events: auto;
-        }
-
-        h1 { margin: 0 0 10px; font-size: 1.2rem; color: #00d2ff; letter-spacing: 2px; text-transform: uppercase; }
-        
-        .hud-row { 
-            display: flex; justify-content: space-between; 
-            font-size: 0.8rem; color: #ccc; margin-bottom: 4px; 
-        }
-
-        /* Поле ввода SEED */
-        .seed-container {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .seed-input {
-            background: rgba(0, 20, 40, 0.5);
-            border: 1px solid #333;
-            border-bottom: 1px solid #00d2ff;
-            color: #fff;
-            padding: 5px;
-            font-family: inherit;
-            text-align: center;
-            outline: none;
-        }
-
-        /* КНОПКА ПРИМЕНИТЬ */
-        .btn-apply {
-            background: rgba(0, 210, 255, 0.1);
-            border: 1px solid #00d2ff;
-            color: #00d2ff;
-            padding: 8px;
-            font-family: inherit;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-        }
-
-        .btn-apply:hover {
-            background: #00d2ff;
-            color: black;
-            box-shadow: 0 0 15px #00d2ff;
-        }
-
-        .btn-apply:active {
-            transform: scale(0.98);
-        }
-
-        /* Лог событий */
-        .log-panel {
-            background: rgba(0, 10, 20, 0.9);
-            border-left: 2px solid #ff3333;
-            height: 120px;
-            overflow: hidden;
-            padding: 10px;
-            font-size: 0.7rem;
-            display: flex;
-            flex-direction: column-reverse; /* Новые снизу, но мы вставляем сверху */
-            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-        }
-
-        .log-entry { margin-bottom: 4px; opacity: 0.8; text-shadow: 0 0 2px black; }
-        .log-warn { color: #ffaa00; }
-        .log-danger { color: #ff3333; font-weight: bold; }
-        .log-sys { color: #00d2ff; }
-        .log-ghost { color: #555; font-style: italic; }
-
-        /* --- ОБЪЕКТЫ --- */
-        .universe-container { width: 100%; position: relative; min-height: 100vh; }
-        .sector { position: relative; width: 100%; height: 80vh; overflow: hidden; }
-        
-        .star { position: absolute; background: white; border-radius: 50%; z-index: 1; }
-        
-        /* Планеты */
-        .planet {
-            position: absolute; border-radius: 50%;
-            box-shadow: inset -10px -10px 30px rgba(0,0,0,0.9), 0 0 10px rgba(255,255,255,0.2);
-            cursor: pointer; z-index: 10; transition: transform 0.3s;
-        }
-        .planet:hover { transform: scale(1.1); border: 1px solid #00d2ff; }
-
-        /* АНОМАЛИИ */
-        .anomaly-blackhole {
-            position: absolute; border-radius: 50%;
-            background: black;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 0 30px 5px rgba(255, 255, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.5);
-            z-index: 20; cursor: pointer;
-            animation: pulse-bh 2s infinite alternate;
-        }
-
-        .anomaly-rift {
-            position: absolute; width: 4px; height: 120px;
-            background: #9900ff;
-            box-shadow: 0 0 15px 4px #9900ff;
-            transform: rotate(45deg);
-            z-index: 15; cursor: pointer;
-        }
-
-        @keyframes pulse-bh { 0% { box-shadow: 0 0 20px white; } 100% { box-shadow: 0 0 50px white; } }
-
-        /* Глитч эффекты */
-        .reality-collapse {
-            animation: glitch-anim 0.2s infinite;
-            filter: contrast(200%) hue-rotate(90deg) blur(2px);
-        }
-        @keyframes glitch-anim {
-            0% { transform: translate(0); }
-            20% { transform: translate(-5px, 5px); }
-            40% { transform: translate(5px, -5px); }
-            100% { transform: translate(0); }
-        }
-
-        /* Экран смерти */
-        .signal-lost {
+        /* --- VISUAL NOISE (ПОМЕХИ) --- */
+        .noise-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; z-index: 9999;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 2s;
+            background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.1"/%3E%3C/svg%3E');
+            pointer-events: none; z-index: 500; opacity: 0;
         }
-        .signal-lost.active { opacity: 1; pointer-events: auto; }
-        .signal-lost h1 { color: red; font-size: 3rem; text-shadow: 2px 2px white; font-family: sans-serif; }
 
-        .trigger { height: 10px; width: 100%; }
+        /* --- NIGHTMARE MODE STYLES (SEED 758) --- */
+        body.cursed-mode {
+            animation: breathe-red 4s infinite;
+        }
+        body.cursed-mode .noise-overlay { opacity: 0.15; animation: noise-anim 0.2s infinite; }
+        body.cursed-mode .planet { filter: invert(1) hue-rotate(180deg); }
+        body.cursed-mode .top-bar { border-bottom: 1px solid red; }
+        body.cursed-mode .status-text { color: red !important; text-shadow: 2px 0 blue; }
+        body.cursed-mode .star { background: red !important; }
+
+        /* Тряска экрана */
+        .shake-hard { animation: shake 0.1s infinite; }
+        
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        @keyframes noise-anim { 0% { transform: translate(0,0); } 100% { transform: translate(10px, 10px); } }
+        @keyframes breathe-red { 0% { background: #000; } 50% { background: #1a0000; } 100% { background: #000; } }
+
+        /* --- JUMPSCARE (ГЛАЗ) --- */
+        .jumpscare {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, #fff 10%, red 20%, transparent 70%);
+            border-radius: 50%;
+            z-index: 9000; display: none; pointer-events: none;
+            box-shadow: 0 0 100px red;
+        }
+        .jumpscare::after {
+            content: ''; position: absolute; top: 40%; left: 40%; width: 20%; height: 20%;
+            background: black; border-radius: 50%;
+        }
+
+        /* --- UI --- */
+        .top-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 40px;
+            background: rgba(0,0,0,0.9); border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 1000;
+        }
+        .status-text { font-size: 0.8rem; color: #00d2ff; font-weight: bold; }
+        .btn-menu { background: transparent; border: 1px solid #00d2ff; color: #00d2ff; padding: 2px 8px; font-size: 12px; }
+
+        .side-menu {
+            position: fixed; top: 40px; left: 0; width: 100%; background: rgba(5,0,0,0.95);
+            border-bottom: 2px solid #555; padding: 15px; box-sizing: border-box;
+            transform: translateY(-150%); transition: transform 0.3s; z-index: 999;
+        }
+        .side-menu.active { transform: translateY(0); }
+        .menu-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .seed-input { flex: 1; background: #000; border: 1px solid #333; color: #fff; padding: 8px; text-align: center; }
+        .btn-action { background: #111; border: 1px solid #fff; color: #fff; padding: 8px 15px; }
+
+        /* Лог */
+        .log-panel { height: 100px; overflow: hidden; background: black; border: 1px solid #333; padding: 5px; font-size: 10px; display: flex; flex-direction: column-reverse; }
+        .c-red { color: #f33; } .c-blue { color: #0df; } 
+        .c-cursed { color: red; font-weight: bold; font-size: 1.1em; text-transform: uppercase; animation: shake 0.5s infinite; }
+
+        /* --- MODALS --- */
+        .planet-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 80%; background: #111; border: 1px solid #fff; padding: 20px; z-index: 2000;
+            text-align: center; transition: 0.2s; opacity: 0; pointer-events: none;
+        }
+        .planet-modal.active { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+        .planet-visual { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 15px; border: 2px solid #333; }
+        
+        .collection-panel {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60vh;
+            background: rgba(0,0,0,0.95); border-top: 2px solid #fff; z-index: 2001;
+            transform: translateY(110%); transition: 0.3s; padding: 20px; overflow-y: auto; box-sizing: border-box;
+        }
+        .collection-panel.active { transform: translateY(0); }
+        .btn-collection { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: #000; border: 2px solid #00d2ff; color: #00d2ff; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1500; display: none; }
+        .overlay.active { display: block; }
+
+        /* --- OBJECTS --- */
+        .universe-container { width: 100%; min-height: 100vh; }
+        .sector { position: relative; width: 100%; height: 80vh; overflow: hidden; }
+        .star { position: absolute; background: white; border-radius: 50%; }
+        .planet { position: absolute; border-radius: 50%; cursor: pointer; z-index: 10; transition: transform 0.2s; }
+        .trigger { height: 10px; }
+
+        /* Glitch Text */
+        .glitch-text { position: fixed; top: 40%; width: 100%; text-align: center; font-size: 3rem; color: red; opacity: 0; z-index: 8000; font-weight: bold; pointer-events: none; }
+
     </style>
 </head>
 <body>
 
-    <div class="hud">
-        <div class="hud-main">
-            <h1>UNIVERSE OS</h1>
-            <div class="hud-row"><span>SECTOR:</span> <span id="sectorVal">000</span></div>
-            <div class="hud-row"><span>DEPTH:</span> <span id="distVal">0 LY</span></div>
-            
-            <div class="seed-container">
-                <input type="number" id="seedInput" class="seed-input" value="666" placeholder="SEED CODE">
-                <button class="btn-apply" onclick="applySeed()">REBOOT SYSTEM</button>
-            </div>
+    <div class="noise-overlay" id="noise"></div>
+
+    <div class="jumpscare" id="jumpscare"></div>
+
+    <div class="glitch-text" id="glitchText">DIE</div>
+
+    <div class="top-bar">
+        <div class="status-text" id="statusLabel">DEPTH: <span id="distVal">0</span> LY</div>
+        <button class="btn-menu" onclick="toggleMenu()">SYSTEM ▼</button>
+    </div>
+
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-row">
+            <input type="number" id="seedInput" class="seed-input" value="1234" placeholder="SEED">
+            <button class="btn-action" onclick="applySeed()">REBOOT</button>
         </div>
-        
-        <div class="log-panel" id="logPanel">
-            <div class="log-entry log-sys">> SYSTEM ONLINE</div>
-            <div class="log-entry log-sys">> WAITING FOR INPUT...</div>
+        <div class="log-panel" id="logPanel"></div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeAll()"></div>
+
+    <div class="planet-modal" id="planetModal">
+        <div class="planet-visual" id="modalVisual"></div>
+        <h2 id="modalName" style="color:#fff;">PLANET</h2>
+        <p id="modalType" style="color:#aaa; font-size:0.8rem;"></p>
+        <div style="text-align: left; font-size: 0.8rem; color: #ddd; margin: 15px 0;">
+            Gravity: <span id="modalGrav">1.0 G</span><br>
+            Temp: <span id="modalTemp">20 C</span>
         </div>
+        <button class="btn-action" style="width: 100%;" onclick="saveToCollection()">DATABASE SAVE</button>
+    </div>
+
+    <button class="btn-collection" onclick="toggleCollection()">★</button>
+    
+    <div class="collection-panel" id="colPanel">
+        <h3 style="color: #fff;">DATABASE (<span id="colCount">0</span>)</h3>
+        <div id="colGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:10px;"></div>
+        <button class="btn-action" style="margin-top:20px; width:100%;" onclick="toggleCollection()">CLOSE</button>
     </div>
 
     <div class="universe-container" id="universe"></div>
     <div class="trigger" id="trigger"></div>
 
-    <div class="signal-lost" id="deathScreen">
-        <h1>SIGNAL LOST</h1>
-        <p style="color: #666;">CRITICAL REALITY FAILURE</p>
-    </div>
-
     <script>
-        // --- SEED SYSTEM ---
-        let seed = 666;
-        
-        // Функция "псевдо-случайности"
+        let seed = 1234;
+        let totalDistance = 0;
+        let currentPlanetData = null;
+        let collection = [];
+        let isCursed = false;
+
+        // Псевдо-рандом
         function random() {
             seed = (seed * 9301 + 49297) % 233280;
             return seed / 233280;
         }
         function randRange(min, max) { return min + random() * (max - min); }
+        function randChoice(arr) { return arr[Math.floor(random() * arr.length)]; }
 
-        // --- DOM Elements ---
-        const universe = document.getElementById('universe');
+        // --- UI ---
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        const planetModal = document.getElementById('planetModal');
+        const colPanel = document.getElementById('colPanel');
         const logPanel = document.getElementById('logPanel');
-        const deathScreen = document.getElementById('deathScreen');
-        
-        let totalDistance = 0;
-        let sectorCount = 0;
+        const jumpEl = document.getElementById('jumpscare');
+        const glitchTextEl = document.getElementById('glitchText');
 
-        // --- ЛОГГЕР ---
-        function addLog(msg, type = 'log-sys') {
-            const el = document.createElement('div');
-            el.className = `log-entry ${type}`;
-            el.innerText = `> ${msg}`;
-            logPanel.prepend(el);
-            if (logPanel.children.length > 8) logPanel.lastElementChild.remove();
+        function toggleMenu() { sideMenu.classList.toggle('active'); if(sideMenu.classList.contains('active')) colPanel.classList.remove('active'); }
+        function toggleCollection() { colPanel.classList.toggle('active'); sideMenu.classList.remove('active'); closeAll(); }
+        function closeAll() { planetModal.classList.remove('active'); overlay.classList.remove('active'); }
+
+        function addLog(msg, style='c-blue') {
+            const div = document.createElement('div');
+            div.className = `log-entry ${style}`;
+            div.innerText = `> ${msg}`;
+            logPanel.prepend(div);
+            if(logPanel.children.length > 8) logPanel.lastElementChild.remove();
         }
 
-        // --- ГЛАВНАЯ ФУНКЦИЯ: СМЕНА МИРА ---
-        function applySeed() {
-            // 1. Берем значение из инпута
-            const inputVal = document.getElementById('seedInput').value;
-            seed = parseInt(inputVal) || Math.floor(Math.random() * 10000); // Если пусто - случайный
+        // --- 758 HORROR LOGIC ---
+        function triggerJumpscare() {
+            // Мгновенный показ "Глаза"
+            jumpEl.style.display = 'block';
+            document.body.classList.add('shake-hard');
             
-            // 2. Очищаем экран
-            universe.innerHTML = ''; 
-            
-            // 3. Сбрасываем счетчики
-            totalDistance = 0;
-            sectorCount = 0;
-            document.getElementById('distVal').innerText = "0 LY";
-            document.getElementById('sectorVal').innerText = "000";
+            // Звуковой эффект через вибрацию (на телефоне)
+            if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
 
-            // 4. Пишем в лог
-            logPanel.innerHTML = ''; // Чистим старый лог
-            addLog(`SYSTEM REBOOTED. SEED: ${seed}`, 'log-danger');
-            addLog("GENERATING NEW TIMELINE...", 'log-sys');
-
-            // 5. Запускаем генерацию (триггер сработает сам, но добавим старт)
-            createSector();
-            createSector();
-            
-            // Скроллим наверх
-            window.scrollTo(0, 0);
+            setTimeout(() => {
+                jumpEl.style.display = 'none';
+                document.body.classList.remove('shake-hard');
+            }, 150); // Очень быстро, 0.15 сек
         }
 
-        // --- СОЗДАНИЕ СЕКТОРА ---
-        function randomColor() { return `hsl(${randRange(0,360)}, 70%, 50%)`; }
+        function triggerGlitchText() {
+            const words = ["BEHIND YOU", "STOP", "IT HURTS", "NULL", "666", "THEY SEE", "RUN"];
+            glitchTextEl.innerText = words[Math.floor(Math.random() * words.length)];
+            glitchTextEl.style.opacity = 1;
+            setTimeout(() => glitchTextEl.style.opacity = 0, 300);
+        }
+
+        // --- GAMEPLAY ---
+        function generatePlanetInfo(color) {
+            const safeNames = ['Kepler', 'Gliese', 'Terra', 'Nova', 'Centauri'];
+            const cursedNames = ['HATE', 'PAIN', 'VOID', 'XX-XX', 'KILL', 'ERROR'];
+            const names = isCursed ? cursedNames : safeNames;
+            
+            return {
+                name: `${randChoice(names)}-${Math.floor(random()*666)}`,
+                type: isCursed ? 'CORRUPTED' : randChoice(['Gas Giant', 'Terran', 'Ice', 'Desert']),
+                gravity: randRange(0.5, 5.0).toFixed(2),
+                temp: Math.floor(randRange(-200, 1000)),
+                color: color
+            };
+        }
+
+        function openPlanetDetails(data) {
+            currentPlanetData = data;
+            document.getElementById('modalName').innerText = data.name;
+            document.getElementById('modalType').innerText = data.type;
+            document.getElementById('modalGrav').innerText = data.gravity + " G";
+            document.getElementById('modalTemp').innerText = data.temp + "°C";
+            document.getElementById('modalVisual').style.background = data.color;
+            
+            if(isCursed) {
+                // В проклятом режиме планета пытается закрыться сама
+                setTimeout(() => closeAll(), 1000);
+                addLog("CONNECTION UNSTABLE", "c-cursed");
+            }
+            
+            overlay.classList.add('active');
+            planetModal.classList.add('active');
+        }
+
+        function saveToCollection() {
+            if (!currentPlanetData || collection.find(p => p.name === currentPlanetData.name)) return;
+            
+            if(isCursed) {
+                // Фейковое сохранение
+                addLog("DATABASE ERROR: DRIVE CORRUPTED", "c-cursed");
+                if(navigator.vibrate) navigator.vibrate(200);
+                return;
+            }
+
+            collection.push(currentPlanetData);
+            updateCollectionUI();
+            addLog(`SAVED: ${currentPlanetData.name}`, 'c-blue');
+            closeAll();
+        }
+
+        function updateCollectionUI() {
+            document.getElementById('colCount').innerText = collection.length;
+            const grid = document.getElementById('colGrid');
+            grid.innerHTML = '';
+            collection.forEach(p => {
+                const item = document.createElement('div');
+                item.style.border = "1px solid #333"; item.style.padding = "5px"; item.style.fontSize = "10px"; item.style.textAlign = "center";
+                item.innerHTML = `<div style="width:30px;height:30px;border-radius:50%;background:${p.color};margin:0 auto;"></div><div>${p.name}</div>`;
+                grid.appendChild(item);
+            });
+        }
 
         function createSector() {
-            sectorCount++;
             const sector = document.createElement('div');
             sector.classList.add('sector');
             const frag = document.createDocumentFragment();
 
+            // ПРОКЛЯТАЯ ЛОГИКА
+            if(isCursed) {
+                // 5% шанс скримера на каждый сектор
+                if(Math.random() > 0.95) triggerJumpscare();
+                // 10% шанс текстового глюка
+                if(Math.random() > 0.90) triggerGlitchText();
+                // Инверсия цветов случайная
+                if(Math.random() > 0.8) document.body.style.filter = "invert(1)";
+                else document.body.style.filter = "invert(0)";
+            } else {
+                document.body.style.filter = "none";
+            }
+
             // Звезды
-            for(let i=0; i<35; i++) {
+            const starCount = isCursed ? 5 : 40;
+            for(let i=0; i<starCount; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                const s = randRange(1, 3);
+                const s = randRange(1, 2);
                 star.style.width = s+'px'; star.style.height = s+'px';
                 star.style.left = randRange(0,100)+'%'; star.style.top = randRange(0,100)+'%';
-                star.style.opacity = randRange(0.2, 1);
+                star.style.opacity = randRange(0.1, 0.8);
                 frag.appendChild(star);
             }
 
             // Планеты
-            if (random() > 0.65) {
+            if (random() > (isCursed ? 0.9 : 0.7)) {
                 const p = document.createElement('div');
                 p.className = 'planet';
-                const s = randRange(60, 140);
+                const s = randRange(40, 90);
+                const color = isCursed ? '#300' : `hsl(${randRange(0,360)}, 70%, 50%)`;
                 p.style.width = s+'px'; p.style.height = s+'px';
                 p.style.left = randRange(10,80)+'%'; p.style.top = randRange(10,80)+'%';
-                p.style.background = randomColor();
-                p.onclick = () => {
-                    addLog(`DATA: Planet ID-${Math.floor(random()*1000)} analyzed.`, 'log-sys');
-                    p.style.border = "2px solid #00d2ff";
-                };
+                p.style.background = color;
+                const pData = generatePlanetInfo(color);
+                p.onclick = (e) => { e.stopPropagation(); openPlanetDetails(pData); };
                 frag.appendChild(p);
             }
 
-            // Аномалии
-            const roll = random();
-            if (roll > 0.98) { // Черная дыра
-                const bh = document.createElement('div');
-                bh.className = 'anomaly-blackhole';
-                const s = randRange(100, 180);
-                bh.style.width = s+'px'; bh.style.height = s+'px';
-                bh.style.left = randRange(20,60)+'%'; bh.style.top = randRange(20,60)+'%';
-                bh.onclick = triggerGameOver;
-                frag.appendChild(bh);
-                addLog("WARNING: GRAVITATIONAL SINGULARITY NEARBY", "log-danger");
-            } else if (roll > 0.96) { // Разлом
-                const rift = document.createElement('div');
-                rift.className = 'anomaly-rift';
-                rift.style.left = randRange(10,90)+'%'; rift.style.top = randRange(10,90)+'%';
-                frag.appendChild(rift);
-            }
-
-            // Призрачные сообщения (редко)
-            if (roll < 0.02) {
-                setTimeout(() => addLog("...is someone there?", "log-ghost"), 1000);
-            }
-
             sector.appendChild(frag);
-            universe.appendChild(sector);
+            document.getElementById('universe').appendChild(sector);
             
-            totalDistance += Math.floor(randRange(300, 800));
-            document.getElementById('distVal').innerText = totalDistance.toLocaleString() + ' LY';
-            document.getElementById('sectorVal').innerText = sectorCount;
+            let distAdd = Math.floor(randRange(100, 300));
+            totalDistance += distAdd;
+            
+            // В 758 дистанция скачет
+            if(isCursed) document.getElementById('distVal').innerText = "666-" + Math.floor(Math.random()*999);
+            else document.getElementById('distVal').innerText = totalDistance.toLocaleString();
         }
 
-        function triggerGameOver() {
-            document.body.classList.add('reality-collapse');
-            document.querySelector('.hud').style.display = 'none';
-            setTimeout(() => deathScreen.classList.add('active'), 1500);
-            setTimeout(() => location.reload(), 5000);
+        function applySeed() {
+            const val = document.getElementById('seedInput').value;
+            seed = parseInt(val) || 1234;
+            
+            isCursed = (seed === 758);
+            
+            const body = document.body;
+            if (isCursed) {
+                body.classList.add('cursed-mode');
+                document.getElementById('statusLabel').innerHTML = "SYSTEM FAILURE";
+                addLog("FATAL ERROR: 758", "c-cursed");
+            } else {
+                body.classList.remove('cursed-mode');
+                body.style.filter = "none";
+                document.getElementById('statusLabel').innerHTML = 'DEPTH: <span id="distVal">0</span> LY';
+                addLog("SYSTEM REBOOTED", "c-blue");
+            }
+
+            document.getElementById('universe').innerHTML = '';
+            totalDistance = 0;
+            toggleMenu();
+            createSector(); createSector(); createSector();
+            window.scrollTo(0,0);
         }
 
-        // --- SCROLL OBSERVER ---
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // Если видно дно - генерируем еще
-                    for(let i=0; i<3; i++) createSector();
-                }
-            });
-        }, { rootMargin: '400px' });
-
-        // Старт
-        applySeed(); // Используем функцию для начальной генерации
+        const observer = new IntersectionObserver((e)=>{e.forEach(x=>{if(x.isIntersecting)for(let i=0;i<3;i++)createSector()})},{rootMargin:'300px'});
         observer.observe(document.getElementById('trigger'));
+        applySeed(); 
 
     </script>
 </body>
